@@ -48,10 +48,32 @@
   
   
   <!-- Problem -->
-  <section class="problem">
-    <h2>Teachers spend 30% of class time on manual tasks.</h2>
-    <p style="font-size: 1.1rem; opacity: 0.9;">We're building the fix.</p>
-  </section>
+<section class="problem" id="rotator">
+  <h2 id="rotating-text"></h2>
+  <p style="font-size: 1.1rem; opacity: 0.9;">We're building the fix.</p>
+</section>
+
+<script>
+const texts = [
+  "Teachers spend 30% of class time on manual tasks.",
+  "Principals spend 15+ hours/week on scheduling conflicts.",
+  "40% of admin time wasted on manual attendance tracking.",
+  "Schools spend 12 hours/week chasing late lesson plans.",
+  "District compliance audits fail 27% of the time."
+];
+let i = 0;
+const el = document.getElementById('rotating-text');
+el.textContent = texts[0];
+setInterval(() => {
+  el.style.opacity = 0;
+  setTimeout(() => {
+    i = (i + 1) % texts.length;
+    el.textContent = texts[i];
+    el.style.opacity = 1;
+  }, 300);
+}, 4000);
+</script>
+
   
   <!-- CTA -->
   <div class="cta">
