@@ -95,12 +95,25 @@ setInterval(() => {
     Team with 25+ years combined classroom experience.</p>
   </div>
 
+
   <!-- Contact Section Start -->
 <div id="contact-section" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
-  <h3>Contact Us</h3>
+  <h2>Contact Me</h2>
   
   <!-- Success/Error Messages -->
-  <div id="status-msg" style="margin-top: 15px; font-weight: bold; padding: 10px; border-radius: 4px; display: none;"></div>
+  <div id="status-msg" style="margin-top: 10px; font-weight: bold; padding: 10px; border-radius: 4px; display: none;"></div>
+
+  <!-- Cloudflare Turnstile Widget -->
+  <div class="cf-turnstile" 
+       data-sitekey="0x4AAAAAADpfJCAvXsPeefNB" 
+       data-callback="turnstileSuccessCallback"
+       data-theme="light">
+  </div>
+  
+  <!-- Turnstile Error Message (Fixed Spacing) -->
+  <div id="turnstile-error" style="color: #dc3545; font-size: 0.9em; display: none; margin-top: 2px; margin-bottom: 15px;">
+    Please complete the security check.<br><br>
+  </div>
 
   <form id="my-form" novalidate style="width: 100%; max-width: 500px; margin: 0 auto;">
     
@@ -114,25 +127,16 @@ setInterval(() => {
     <div style="margin-bottom: 15px; text-align: left;">
       <label for="message" style="display: block; margin-bottom: 5px; font-weight: bold;">Message</label>
       <textarea id="message" name="message" rows="5" required
-                placeholder="How can we help you?"
+                placeholder="How can I help you?"
                 style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
     </div>
 
-      <!-- Cloudflare Turnstile Widget -->
-  <div class="cf-turnstile" 
-       data-sitekey="0x4AAAAAADpfJCAvXsPeefNB" 
-       data-callback="turnstileSuccessCallback"
-       data-theme="light">
-  </div>
-  <div id="turnstile-error" style="color: #dc3545; font-size: 0.9em; display: none; margin-top: 5px;">
-    Please complete the security check.<br>
-  </div>
-
-    <!-- Submit Button -->
+    <!-- Submit Button (Initially Disabled) -->
     <button type="submit" 
             class="cta-button"
             id="send-btn"
-            style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 2rem; border-radius: 8px; font-weight: 600; transition: transform 0.2s; border: none; cursor: pointer; font-size: 16px; width: 100%; max-width: 300px;">
+            disabled
+            style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 2rem; border-radius: 8px; font-weight: 600; transition: transform 0.2s 0.1s, opacity 0.2s; border: none; cursor: pointer; font-size: 16px; width: 100%; max-width: 300px; opacity: 0.6; pointer-events: none;">
       Send Message
     </button>
   </form>
@@ -143,41 +147,65 @@ setInterval(() => {
 
 <!-- JavaScript Logic -->
 <script>
-  // Store the Turnstile token after successful verification
   let turnstileToken = null;
+  const emailInput = document.getElementById('email');
+  const messageInput = document.getElementById('message');
+  const sendBtn = document.getElementById('send-btn');
+  const statusMsg = document.getElementById('status-msg');
+  const turnstileError = document.getElementById('turnstile-error');
 
-  function turnstileSuccessCallback(token) {
-    console.log("✅ Turnstile verified. Token:", token.substring(0, 20) + "...");
-    turnstileToken = token;
-    document.getElementById('turnstile-error').style.display = 'none';
+  // Function to check if all conditions are met
+  function validateForm() {
+    const hasEmail = emailInput.value.trim().length > 0 && emailInput.checkValidity();
+    const hasMessage = messageInput.value.trim().length > 0;
+    const hasTurnstile = !!turnstileToken;
+
+    if (hasEmail && hasMessage && hasTurnstile) {
+      // Enable button
+      sendBtn.disabled = false;
+      sendBtn.style.opacity = '1';
+      sendBtn.style.pointerEvents = 'auto';
+      sendBtn.style.cursor = 'pointer';
+    } else {
+      // Disable button
+      sendBtn.disabled = true;
+      sendBtn.style.opacity = '0.6';
+      sendBtn.style.pointerEvents = 'none';
+      sendBtn.style.cursor = 'not-allowed';
+    }
   }
 
-  const form = document.getElementById('my-form');
-  const statusMsg = document.getElementById('status-msg');
-  const btn = document.getElementById('send-btn');
+  // Listen for Turnstile success
+  function turnstileSuccessCallback(token) {
+    console.log("✅ Turnstile verified.");
+    turnstileToken = token;
+    turnstileError.style.display = 'none';
+    validateForm(); // Re-check validity
+  }
 
-  form.addEventListener('submit', async function(e) {
-    e.preventDefault(); // STOP PAGE RELOAD
-    
-    // Check Turnstile first
-    if (!turnstileToken) {
-      document.getElementById('turnstile-error').style.display = 'block';
-      document.getElementById('turnstile-error').innerText = "Please complete the human verification checkbox first.";
-      statusMsg.style.display = 'none';
+  // Listen for input changes
+  emailInput.addEventListener('input', validateForm);
+  messageInput.addEventListener('input', validateForm);
+
+  // Handle Form Submission
+  sendBtn.parentElement.addEventListener('submit', async function(e) {
+    e.preventDefault(); // Stop reload
+
+    // Double validation safety check
+    if (!turnstileToken || !emailInput.value.trim() || !messageInput.value.trim()) {
+      turnstileError.style.display = 'block';
+      turnstileError.innerHTML = "Please complete the verification and fill out all fields.<br><br>";
       return;
     }
 
     // Visual Feedback
-    btn.disabled = true;
-    const originalText = btn.innerText;
-    btn.innerText = 'Sending...';
-    btn.style.opacity = '0.7';
+    sendBtn.disabled = true;
+    const originalText = sendBtn.innerText;
+    sendBtn.innerText = 'Sending...';
+    sendBtn.style.opacity = '0.7';
     statusMsg.style.display = 'none';
 
-    // Prepare Form Data
-    const formData = new FormData(form);
-    
-    // CRITICAL: Append Turnstile token with exact field name Formspree expects
+    const formData = new FormData(this);
     formData.append('cf-turnstile-response', turnstileToken);
 
     try {
@@ -190,24 +218,19 @@ setInterval(() => {
       const data = await response.json();
 
       if (response.ok) {
-        // SUCCESS
         statusMsg.style.display = 'block';
         statusMsg.style.backgroundColor = '#d4edda';
         statusMsg.style.color = '#155724';
         statusMsg.innerHTML = "<strong>Success!</strong> Your message has been sent.";
         
-        // Reset everything
-        form.reset();
+        // Reset form
+        this.reset();
         turnstileToken = null;
-        
-        // Reset Turnstile widget for next submission
-        if (window.turnstile) {
-          window.turnstile.reset();
-        }
+        if (window.turnstile) window.turnstile.reset();
+        validateForm(); // Disable button again
         
         console.log("✅ Submission successful:", data);
       } else {
-        // ERROR from Formspree
         statusMsg.style.display = 'block';
         statusMsg.style.backgroundColor = '#f8d7da';
         statusMsg.style.color = '#721c24';
@@ -215,20 +238,26 @@ setInterval(() => {
         console.error("❌ Formspree Error:", data);
       }
     } catch (err) {
-      // NETWORK ERROR
       statusMsg.style.display = 'block';
       statusMsg.style.backgroundColor = '#f8d7da';
       statusMsg.style.color = '#721c24';
-      statusMsg.innerText = "Network Error. Please check your connection.";
+      statusMsg.innerText = "Network Error. Please try again.";
       console.error("❌ Fetch Error:", err);
     } finally {
-      // Restore button state
-      btn.disabled = false;
-      btn.innerText = originalText;
-      btn.style.opacity = '1';
+      // If there was an error but not client-side, re-enable button if fields are still full
+      if (!turnstileError.style.display === 'none') {
+          validateForm(); 
+      }
+      sendBtn.innerText = originalText;
+      sendBtn.style.opacity = '1'; // Reset opacity unless disabled by logic
+      if(sendBtn.disabled) sendBtn.style.opacity = '0.6';
     }
   });
+
+  // Initial validation run in case fields were pre-filled
+  validateForm();
 </script>
+  
   
   <!-- Footer -->
   <footer>
