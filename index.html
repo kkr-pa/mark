@@ -94,6 +94,141 @@ setInterval(() => {
     <p><strong>Founder:</strong> K K Reddy, B.Tech., IIT Madras, M.S.E., The University of Texas at Austin<br>
     Team with 25+ years combined classroom experience.</p>
   </div>
+
+  <!-- Contact Section Start -->
+<div id="contact-section" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+  <h2>Contact Me</h2>
+  
+  <!-- Success/Error Messages -->
+  <div id="status-msg" style="margin-top: 15px; font-weight: bold; padding: 10px; border-radius: 4px; display: none;"></div>
+
+  <!-- Cloudflare Turnstile Widget -->
+  <div class="cf-turnstile" 
+       data-sitekey="0x4AAAAAADpfJCAvXsPeefNB" 
+       data-callback="turnstileSuccessCallback"
+       data-theme="light">
+  </div>
+  <div id="turnstile-error" style="color: #dc3545; font-size: 0.9em; display: none; margin-top: 5px;">
+    Please complete the security check.
+  </div>
+
+  <form id="my-form" novalidate style="width: 100%; max-width: 500px; margin: 0 auto;">
+    
+    <div style="margin-bottom: 15px; text-align: left; margin-top: 20px;">
+      <label for="email" style="display: block; margin-bottom: 5px; font-weight: bold;">Your Email</label>
+      <input type="email" id="email" name="email" required 
+             placeholder="you@example.com"
+             style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+    </div>
+
+    <div style="margin-bottom: 15px; text-align: left;">
+      <label for="message" style="display: block; margin-bottom: 5px; font-weight: bold;">Message</label>
+      <textarea id="message" name="message" rows="5" required
+                placeholder="How can I help you?"
+                style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit" 
+            class="cta-button"
+            id="send-btn"
+            style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 2rem; border-radius: 8px; font-weight: 600; transition: transform 0.2s; border: none; cursor: pointer; font-size: 16px; width: 100%; max-width: 300px;">
+      Send Message
+    </button>
+  </form>
+</div>
+
+<!-- Cloudflare Turnstile Script -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+<!-- JavaScript Logic -->
+<script>
+  // Store the Turnstile token after successful verification
+  let turnstileToken = null;
+
+  function turnstileSuccessCallback(token) {
+    console.log("✅ Turnstile verified. Token:", token.substring(0, 20) + "...");
+    turnstileToken = token;
+    document.getElementById('turnstile-error').style.display = 'none';
+  }
+
+  const form = document.getElementById('my-form');
+  const statusMsg = document.getElementById('status-msg');
+  const btn = document.getElementById('send-btn');
+
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault(); // STOP PAGE RELOAD
+    
+    // Check Turnstile first
+    if (!turnstileToken) {
+      document.getElementById('turnstile-error').style.display = 'block';
+      document.getElementById('turnstile-error').innerText = "Please complete the human verification checkbox first.";
+      statusMsg.style.display = 'none';
+      return;
+    }
+
+    // Visual Feedback
+    btn.disabled = true;
+    const originalText = btn.innerText;
+    btn.innerText = 'Sending...';
+    btn.style.opacity = '0.7';
+    statusMsg.style.display = 'none';
+
+    // Prepare Form Data
+    const formData = new FormData(form);
+    
+    // CRITICAL: Append Turnstile token with exact field name Formspree expects
+    formData.append('cf-turnstile-response', turnstileToken);
+
+    try {
+      const response = await fetch('https://formspree.io/f/xrewbgqg', {
+        method: 'POST',
+        body: formData,
+        headers: { 'Accept': 'application/json' }
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // SUCCESS
+        statusMsg.style.display = 'block';
+        statusMsg.style.backgroundColor = '#d4edda';
+        statusMsg.style.color = '#155724';
+        statusMsg.innerHTML = "<strong>Success!</strong> Your message has been sent.";
+        
+        // Reset everything
+        form.reset();
+        turnstileToken = null;
+        
+        // Reset Turnstile widget for next submission
+        if (window.turnstile) {
+          window.turnstile.reset();
+        }
+        
+        console.log("✅ Submission successful:", data);
+      } else {
+        // ERROR from Formspree
+        statusMsg.style.display = 'block';
+        statusMsg.style.backgroundColor = '#f8d7da';
+        statusMsg.style.color = '#721c24';
+        statusMsg.innerHTML = "<strong>Error:</strong> " + (data.errors ? data.errors[0].message : "Something went wrong.");
+        console.error("❌ Formspree Error:", data);
+      }
+    } catch (err) {
+      // NETWORK ERROR
+      statusMsg.style.display = 'block';
+      statusMsg.style.backgroundColor = '#f8d7da';
+      statusMsg.style.color = '#721c24';
+      statusMsg.innerText = "Network Error. Please check your connection.";
+      console.error("❌ Fetch Error:", err);
+    } finally {
+      // Restore button state
+      btn.disabled = false;
+      btn.innerText = originalText;
+      btn.style.opacity = '1';
+    }
+  });
+</script>
   
   <!-- Footer -->
   <footer>
