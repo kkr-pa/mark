@@ -102,16 +102,6 @@ setInterval(() => {
   <!-- Success/Error Messages -->
   <div id="status-msg" style="margin-top: 15px; font-weight: bold; padding: 10px; border-radius: 4px; display: none;"></div>
 
-  <!-- Cloudflare Turnstile Widget -->
-  <div class="cf-turnstile" 
-       data-sitekey="0x4AAAAAADpfJCAvXsPeefNB" 
-       data-callback="turnstileSuccessCallback"
-       data-theme="light">
-  </div>
-  <div id="turnstile-error" style="color: #dc3545; font-size: 0.9em; display: none; margin-top: 5px;">
-    Please complete the security check.
-  </div>
-
   <form id="my-form" novalidate style="width: 100%; max-width: 500px; margin: 0 auto;">
     
     <div style="margin-bottom: 15px; text-align: left; margin-top: 20px;">
@@ -127,6 +117,16 @@ setInterval(() => {
                 placeholder="How can I help you?"
                 style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
     </div>
+
+      <!-- Cloudflare Turnstile Widget -->
+  <div class="cf-turnstile" 
+       data-sitekey="0x4AAAAAADpfJCAvXsPeefNB" 
+       data-callback="turnstileSuccessCallback"
+       data-theme="light">
+  </div>
+  <div id="turnstile-error" style="color: #dc3545; font-size: 0.9em; display: none; margin-top: 5px;">
+    Please complete the security check.
+  </div>
 
     <!-- Submit Button -->
     <button type="submit" 
