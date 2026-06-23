@@ -107,8 +107,18 @@ setInterval(() => {
     Oops! Something went wrong. Please try again later.
   </div>
 
+  <!-- Turnstile Widget Container -->
+  <div class="cf-turnstile" 
+       data-sitekey="0x4AAAAAADpfJCAvXsPeefNB" 
+       data-callback="turnstileCallback"
+       data-theme="light">
+  </div>
+  <div id="turnstile-error" style="color: #dc3545; font-size: 0.9em; display: none; margin-top: 5px;">
+    Please complete the security check to submit this form.
+  </div>
+
   <!-- Form Container with max-width for better layout -->
-  <form id="my-form" novalidate style="width: 100%; max-width: 500px; margin: 0 auto;">
+  <form id="my-form" novalidate style="width: 100%; max-width: 500px; margin: 0 auto; margin-top: 20px;">
     
     <div style="margin-bottom: 15px; text-align: left;">
       <label for="email" style="display: block; margin-bottom: 5px; font-weight: bold;">Your Email</label>
@@ -136,6 +146,18 @@ setInterval(() => {
   </form>
 </div>
 
+<!-- Cloudflare Turnstile Script -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+<!-- Turnstile Callback Function -->
+<script>
+  // Called when Turnstile successfully validates
+  function turnstileCallback(token) {
+    console.log("Turnstile token obtained:", token);
+    document.getElementById('turnstile-error').style.display = 'none';
+  }
+</script>
+
 <!-- Formspree SDK Initialization -->
 <script>
   window.formspree = window.formspree || function () { (formspree.q = formspree.q || []).push(arguments); };
@@ -143,10 +165,11 @@ setInterval(() => {
   // Initialize with your specific Form ID
   formspree('initForm', { 
     formElement: '#my-form', 
-    formId: 'xrewbgqg' 
+    formId: 'xrewbgqg'
   });
 </script>
 <script src="https://unpkg.com/@formspree/ajax@1" defer></script>
+
   
   <!-- Footer -->
   <footer>
