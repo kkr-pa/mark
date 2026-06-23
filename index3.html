@@ -97,7 +97,7 @@ setInterval(() => {
 
   <!-- Contact Section Start -->
 <div id="contact-section" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
-  <h3>Contact Us</h3>
+  <h2>Contact Me</h2>
   
   <!-- Success/Status Message Box -->
   <div id="status-msg" style="margin-top: 15px; font-weight: bold; padding: 10px; border-radius: 4px; display: none;"></div>
@@ -118,35 +118,6 @@ setInterval(() => {
                 style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
     </div>
 
-  <!-- Turnstile Widget Container -->
-  <div class="cf-turnstile" 
-       data-sitekey="0x4AAAAAADpfJCAvXsPeefNB" 
-       data-callback="turnstileCallback"
-       data-theme="light">
-  </div>
-  <div id="turnstile-error" style="color: #dc3545; font-size: 0.9em; display: none; margin-top: 5px;">
-    Please complete the security check to submit this form.
-  </div>
-
-  <!-- Form Container with max-width for better layout -->
-  <form id="my-form" novalidate style="width: 100%; max-width: 500px; margin: 0 auto; margin-top: 20px;">
-    
-    <div style="margin-bottom: 15px; text-align: left;">
-      <label for="email" style="display: block; margin-bottom: 5px; font-weight: bold;">Your Email</label>
-      <input type="email" id="email" name="email" data-fs-field required 
-             placeholder="you@example.com"
-             style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
-      <span data-fs-error="email" style="color: #dc3545; font-size: 0.9em; display: block; margin-top: 5px;"></span>
-    </div>
-
-    <div style="margin-bottom: 15px; text-align: left;">
-      <label for="message" style="display: block; margin-bottom: 5px; font-weight: bold;">Message</label>
-      <textarea id="message" name="message" data-fs-field rows="5" required
-                placeholder="How can we help you?"
-                style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
-      <span data-fs-error="message" style="color: #dc3545; font-size: 0.9em; display: block; margin-top: 5px;"></span>
-    </div>
-
     <!-- Submit Button -->
     <button type="submit" 
             class="cta-button"
@@ -154,110 +125,72 @@ setInterval(() => {
             style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 2rem; border-radius: 8px; font-weight: 600; transition: transform 0.2s; border: none; cursor: pointer; font-size: 16px; width: 100%; max-width: 300px;">
       Send Message
     </button>
-    
   </form>
 </div>
 
-  <!-- Cloudflare Turnstile Script -->
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-
-<!-- Custom Script to Handle Turnstile + Formspree -->
+<!-- JavaScript Logic -->
 <script>
-  // 1. Store the Turnstile token when verification succeeds
-  let turnstileToken = null;
+  const form = document.getElementById('my-form');
+  const statusMsg = document.getElementById('status-msg');
+  const btn = document.getElementById('send-btn');
 
-  function turnstileCallback(token) {
-    console.log("Turnstile token obtained:", token);
-    turnstileToken = token;
-    document.getElementById('turnstile-error').style.display = 'none';
-  }
-
-  // 2. Intercept the Formspree submit event to inject the token
-  document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('my-form');
-    const originalSubmit = form.submit.bind(form);
-
-    // We override the submit action handled by the formspree-ajax library
-    // Note: Since @formspree/ajax handles its own fetch, we hook into the 
-    // standard form submit event which triggers the library's logic.
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault(); // STOP PAGE RELOAD
     
-    form.addEventListener('submit', function(e) {
-      e.preventDefault(); // Prevent default browser submission
-      
-      if (!turnstileToken) {
-        document.getElementById('turnstile-error').innerText = "Please complete the security check.";
-        document.getElementById('turnstile-error').style.display = 'block';
+    // 1. Visual Feedback: Disable button and change text
+    btn.disabled = true;
+    const originalText = btn.innerText;
+    btn.innerText = 'Sending...';
+    btn.style.opacity = '0.7';
+    statusMsg.style.display = 'none';
+
+    const formData = new FormData(form);
+
+    try {
+      // 2. Send to Formspree
+      const response = await fetch(this.action, {
+        method: this.method,
+        body: formData,
+        headers: { 'Accept': 'application/json' }
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // SUCCESS
+        statusMsg.style.display = 'block';
+        statusMsg.style.backgroundColor = '#d4edda';
+        statusMsg.style.color = '#155724';
+        statusMsg.innerHTML = "<strong>Success!</strong> Your message has been sent.";
         
-        // Trigger a visual shake on the widget (optional feedback)
-        const widget = document.querySelector('.cf-turnstile iframe');
-        if(widget) {
-          widget.style.transition = "transform 0.3s";
-          widget.style.transform = "translateX(-5px)";
-          setTimeout(() => widget.style.transform = "translateX(5px)", 100);
-          setTimeout(() => widget.style.transform = "translateX(0)", 200);
-        }
-        return;
+        // Reset form
+        form.reset();
+        console.log("Submission successful:", data);
+      } else {
+        // ERROR from Formspree
+        statusMsg.style.display = 'block';
+        statusMsg.style.backgroundColor = '#f8d7da';
+        statusMsg.style.color = '#721c24';
+        statusMsg.innerHTML = "<strong>Error:</strong> " + (data.errors ? data.errors[0].message : "Something went wrong.");
+        console.error("Formspree Error:", data);
       }
-
-      // If successful, proceed with Formspree submission
-      // We manually construct the FormData to include the token
-      const formData = new FormData(form);
-      
-      // CRITICAL: Add the Turnstile response field
-      // Formspree expects the field name 'cf-turnstile-response'
-      formData.append('cf-turnstile-response', turnstileToken);
-
-      // Now send via Fetch API directly (bypassing the library's auto-handling 
-      // which might not see our appended data easily, or just calling the library 
-      // after appending is safer).
-      
-      // Actually, the safest way with the official @formspree/ajax library 
-      // is to let it handle the fetch BUT ensure the input exists in the DOM 
-      // OR pass it in the init options if supported. 
-      // However, since we used a callback, the easiest reliable method is 
-      // to manually call the Formspree endpoint using the same logic the library uses,
-      // or simply append a hidden input dynamically.
-
-      // Let's do the Hidden Input Method which works 100% with the library:
-      let hiddenInput = document.createElement('input');
-      hiddenInput.type = 'hidden';
-      hiddenInput.name = 'cf-turnstile-response';
-      hiddenInput.value = turnstileToken;
-      form.appendChild(hiddenInput);
-
-      // Now trigger the form's native submit, which the @formspree-ajax script 
-      // listens for and intercepts automatically.
-      form.requestSubmit(); 
-    });
-  });
-
-  window.formspree = window.formspree || function () { (formspree.q = formspree.q || []).push(arguments); };
-  
-  formspree('initForm', { 
-    formElement: '#my-form', 
-    formId: 'xrewbgqg' 
+    } catch (err) {
+      // NETWORK ERROR
+      statusMsg.style.display = 'block';
+      statusMsg.style.backgroundColor = '#f8d7da';
+      statusMsg.style.color = '#721c24';
+      statusMsg.innerText = "Network Error. Please check your connection.";
+      console.error("Fetch Error:", err);
+    } finally {
+      // 3. Restore button state
+      btn.disabled = false;
+      btn.innerText = originalText;
+      btn.style.opacity = '1';
+    }
   });
 </script>
-<script src="https://unpkg.com/@formspree/ajax@1" defer></script>
 
-    <!-- Success/Status Message Box -->
-  <div id="status-msg" style="margin-top: 15px; font-weight: bold; padding: 10px; border-radius: 4px; display: none;"></div>
-
-  <form id="my-form" novalidate style="width: 100%; max-width: 500px; margin: 0 auto;" action="https://formspree.io/f/xrewbgqg" method="POST">
-    
-    <div style="margin-bottom: 15px; text-align: left;">
-      <label for="email" style="display: block; margin-bottom: 5px; font-weight: bold;">Your Email</label>
-      <input type="email" id="email" name="email" required 
-             placeholder="you@example.com"
-             style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
-    </div>
-
-    <div style="margin-bottom: 15px; text-align: left;">
-      <label for="message" style="display: block; margin-bottom: 5px; font-weight: bold;">Message</label>
-      <textarea id="message" name="message" rows="5" required
-                placeholder="How can I help you?"
-                style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
-    </div>
+  
   
   <!-- Footer -->
   <footer>
