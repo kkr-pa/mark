@@ -146,30 +146,87 @@ setInterval(() => {
   </form>
 </div>
 
-<!-- Cloudflare Turnstile Script -->
+  <!-- Cloudflare Turnstile Script -->
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
-<!-- Turnstile Callback Function -->
+<!-- Custom Script to Handle Turnstile + Formspree -->
 <script>
-  // Called when Turnstile successfully validates
+  // 1. Store the Turnstile token when verification succeeds
+  let turnstileToken = null;
+
   function turnstileCallback(token) {
     console.log("Turnstile token obtained:", token);
+    turnstileToken = token;
     document.getElementById('turnstile-error').style.display = 'none';
   }
-</script>
 
-<!-- Formspree SDK Initialization -->
-<script>
+  // 2. Intercept the Formspree submit event to inject the token
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('my-form');
+    const originalSubmit = form.submit.bind(form);
+
+    // We override the submit action handled by the formspree-ajax library
+    // Note: Since @formspree/ajax handles its own fetch, we hook into the 
+    // standard form submit event which triggers the library's logic.
+    
+    form.addEventListener('submit', function(e) {
+      e.preventDefault(); // Prevent default browser submission
+      
+      if (!turnstileToken) {
+        document.getElementById('turnstile-error').innerText = "Please complete the security check.";
+        document.getElementById('turnstile-error').style.display = 'block';
+        
+        // Trigger a visual shake on the widget (optional feedback)
+        const widget = document.querySelector('.cf-turnstile iframe');
+        if(widget) {
+          widget.style.transition = "transform 0.3s";
+          widget.style.transform = "translateX(-5px)";
+          setTimeout(() => widget.style.transform = "translateX(5px)", 100);
+          setTimeout(() => widget.style.transform = "translateX(0)", 200);
+        }
+        return;
+      }
+
+      // If successful, proceed with Formspree submission
+      // We manually construct the FormData to include the token
+      const formData = new FormData(form);
+      
+      // CRITICAL: Add the Turnstile response field
+      // Formspree expects the field name 'cf-turnstile-response'
+      formData.append('cf-turnstile-response', turnstileToken);
+
+      // Now send via Fetch API directly (bypassing the library's auto-handling 
+      // which might not see our appended data easily, or just calling the library 
+      // after appending is safer).
+      
+      // Actually, the safest way with the official @formspree/ajax library 
+      // is to let it handle the fetch BUT ensure the input exists in the DOM 
+      // OR pass it in the init options if supported. 
+      // However, since we used a callback, the easiest reliable method is 
+      // to manually call the Formspree endpoint using the same logic the library uses,
+      // or simply append a hidden input dynamically.
+
+      // Let's do the Hidden Input Method which works 100% with the library:
+      let hiddenInput = document.createElement('input');
+      hiddenInput.type = 'hidden';
+      hiddenInput.name = 'cf-turnstile-response';
+      hiddenInput.value = turnstileToken;
+      form.appendChild(hiddenInput);
+
+      // Now trigger the form's native submit, which the @formspree-ajax script 
+      // listens for and intercepts automatically.
+      form.requestSubmit(); 
+    });
+  });
+
   window.formspree = window.formspree || function () { (formspree.q = formspree.q || []).push(arguments); };
   
-  // Initialize with your specific Form ID
   formspree('initForm', { 
     formElement: '#my-form', 
-    formId: 'xrewbgqg'
+    formId: 'xrewbgqg' 
   });
 </script>
 <script src="https://unpkg.com/@formspree/ajax@1" defer></script>
-
   
   <!-- Footer -->
   <footer>
