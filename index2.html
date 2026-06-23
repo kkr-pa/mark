@@ -95,9 +95,9 @@ setInterval(() => {
     Team with 25+ years combined classroom experience.</p>
   </div>
 
-<!-- Contact Section Start -->
-<div id="contact-section">
-  <h2>Contact Me</h2>
+  <!-- Contact Section Start -->
+<div id="contact-section" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+  <h3>Contact Us</h3>
   
   <!-- Success/Error Message Containers (Hidden by default) -->
   <div data-fs-success style="display: none; padding: 10px; background-color: #d4edda; color: #155724; border-radius: 4px; margin-bottom: 15px;">
@@ -107,9 +107,10 @@ setInterval(() => {
     Oops! Something went wrong. Please try again later.
   </div>
 
-  <form id="my-form" novalidate>
+  <!-- Form Container with max-width for better layout -->
+  <form id="my-form" novalidate style="width: 100%; max-width: 500px; margin: 0 auto;">
     
-    <div style="margin-bottom: 15px;">
+    <div style="margin-bottom: 15px; text-align: left;">
       <label for="email" style="display: block; margin-bottom: 5px; font-weight: bold;">Your Email</label>
       <input type="email" id="email" name="email" data-fs-field required 
              placeholder="you@example.com"
@@ -117,7 +118,7 @@ setInterval(() => {
       <span data-fs-error="email" style="color: #dc3545; font-size: 0.9em; display: block; margin-top: 5px;"></span>
     </div>
 
-    <div style="margin-bottom: 15px;">
+    <div style="margin-bottom: 15px; text-align: left;">
       <label for="message" style="display: block; margin-bottom: 5px; font-weight: bold;">Message</label>
       <textarea id="message" name="message" data-fs-field rows="5" required
                 placeholder="How can I help you?"
@@ -125,12 +126,13 @@ setInterval(() => {
       <span data-fs-error="message" style="color: #dc3545; font-size: 0.9em; display: block; margin-top: 5px;"></span>
     </div>
 
+    <!-- Styled Submit Button matching your .cta-button class -->
     <button type="submit" data-fs-submit-btn 
-            style="background-color: #007bff; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 16px;">
+            class="cta-button"
+            style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 2rem; border-radius: 8px; font-weight: 600; text-decoration: none; transition: transform 0.2s; border: none; cursor: pointer; font-size: 16px; width: 100%; max-width: 300px;">
       Send Message
     </button>
     
-    <!-- Note: The button will be disabled automatically during submission -->
   </form>
 </div>
 
