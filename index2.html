@@ -95,22 +95,56 @@ setInterval(() => {
     Team with 25+ years combined classroom experience.</p>
   </div>
 
-  <!-- Contact Form -->
-  <form
-  action="https://formspree.io/f/xrewbgqg"
-  method="POST"
->
-  <label>
-    Your email:
-    <input type="email" name="email">
-  </label>
-  <label>
-    Your message:
-    <textarea name="message"></textarea>
-  </label>
-  <!-- your other form fields go here -->
-  <button type="submit">Send</button>
-</form>
+<!-- Contact Section Start -->
+<div id="contact-section">
+  <h2>Contact Me</h2>
+  
+  <!-- Success/Error Message Containers (Hidden by default) -->
+  <div data-fs-success style="display: none; padding: 10px; background-color: #d4edda; color: #155724; border-radius: 4px; margin-bottom: 15px;">
+    Thanks! Your message has been sent successfully.
+  </div>
+  <div data-fs-error style="display: none; padding: 10px; background-color: #f8d7da; color: #721c24; border-radius: 4px; margin-bottom: 15px;">
+    Oops! Something went wrong. Please try again later.
+  </div>
+
+  <form id="my-form" novalidate>
+    
+    <div style="margin-bottom: 15px;">
+      <label for="email" style="display: block; margin-bottom: 5px; font-weight: bold;">Your Email</label>
+      <input type="email" id="email" name="email" data-fs-field required 
+             placeholder="you@example.com"
+             style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+      <span data-fs-error="email" style="color: #dc3545; font-size: 0.9em; display: block; margin-top: 5px;"></span>
+    </div>
+
+    <div style="margin-bottom: 15px;">
+      <label for="message" style="display: block; margin-bottom: 5px; font-weight: bold;">Message</label>
+      <textarea id="message" name="message" data-fs-field rows="5" required
+                placeholder="How can I help you?"
+                style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
+      <span data-fs-error="message" style="color: #dc3545; font-size: 0.9em; display: block; margin-top: 5px;"></span>
+    </div>
+
+    <button type="submit" data-fs-submit-btn 
+            style="background-color: #007bff; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 16px;">
+      Send Message
+    </button>
+    
+    <!-- Note: The button will be disabled automatically during submission -->
+  </form>
+</div>
+
+<!-- Formspree SDK Initialization -->
+<script>
+  window.formspree = window.formspree || function () { (formspree.q = formspree.q || []).push(arguments); };
+  
+  // Initialize with your specific Form ID
+  formspree('initForm', { 
+    formElement: '#my-form', 
+    formId: 'xrewbgqg' 
+  });
+</script>
+<script src="https://unpkg.com/@formspree/ajax@1" defer></script>
   
   <!-- Footer -->
   <footer>
